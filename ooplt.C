@@ -28,15 +28,14 @@ class plotter{
     TString save_path;
 
     // Plot Specific Variables
-    bool bars_legend = true;
+    bool legend_bool = false;
 
     public:
         // Overload Constructor
         plotter(TFile*, TFile*);
 
         // Plotting Functions
-        void main_plot(TString, TString, int, int); // Plots histograms with preset options
-        void bars_plot(TString, TString, int, int); // Suited for plots with large bins relative to dataset
+        void main_plot(TString, TString, int, int, TString); // Plots histograms with preset options
         void adv_plot(TString, TString, int, int); // Advanced plot, with ratio plot of data vs mc
         void plot_data(TString, TString, int, int, TString); // Just plots data, plot must be customized manually
         void plot_mc(TString, TString, int, int, TString); // Just plots monte carlo, plot must be customized manually
@@ -70,7 +69,7 @@ plotter::plotter(TFile* new_fdata, TFile* new_fmc){
 }
 
 // Plotting Functions
-void plotter::main_plot(TString ref, TString title, int xmin, int xmax){
+void plotter::main_plot(TString ref, TString title, int xmin, int xmax, TString plt_typ){
 
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
     data = (TH1F*)f_data->Get(ref)->Clone("data");
@@ -82,40 +81,6 @@ void plotter::main_plot(TString ref, TString title, int xmin, int xmax){
     mc->GetXaxis()->SetTitle(get_xLabel(ref));
     mc->GetXaxis()->SetRangeUser(xmin, xmax);
     mc->SetTitle(title);
-    mc->SetFillColor(38);
-
-    // Ensure that first plot accomodates for maximum of second plot
-    mc->SetMaximum(max(mc->GetMaximum(), data->GetMaximum()));
-
-    data->SetMarkerStyle(kFullCircle);
-    data->SetLineColor(kBlack);
-
-    // Normalizing
-    mc->Scale(sf);
-
-    mc->Draw("HIST");
-    data->Draw("E1 SAME");
-    
-    C->SaveAs(save_path + ref + save_ext);
-
-    return; 
-}
-
-void plotter::bars_plot(TString ref, TString title, int xmin, int xmax){
-
-    TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
-    data = (TH1F*)f_data->Get(ref)->Clone("data");
-    mc = (TH1F*)f_mc->Get(ref)->Clone("mc");
-
-    C->SetLogy(1);
-    gStyle->SetOptStat(0);
-    gStyle->SetErrorX(0);
-
-    mc->SetFillColor(38);
-    mc->SetLineColor(kBlue);
-    mc->GetXaxis()->SetTitle(get_xLabel(ref));
-    mc->GetXaxis()->SetRangeUser(xmin, xmax);
-    mc->SetTitle(title);
 
     // Ensure that first plot accomodates for maximum of second plot
     mc->SetMaximum(max(mc->GetMaximum(), data->GetMaximum()));
@@ -123,13 +88,40 @@ void plotter::bars_plot(TString ref, TString title, int xmin, int xmax){
     // Normalizing
     mc->Scale(sf);
 
-    data->SetFillStyle(3002);
-    data->SetFillColor(8);
-    data->SetLineColor(kGreen);
-    mc->Draw("HIST");
-    data->Draw("HIST SAME");
+    // Default plot: MC -> blue solid fill, Data -> black markers w/ errorbars
+    if (plt_typ == "DEFAULT"){
 
-    if (bars_legend == true){
+        mc->SetFillColor(38);
+        mc->SetLineColor(kBlue);
+        mc->SetLineWidth(2);
+        data->SetMarkerStyle(kFullCircle);
+        data->SetLineColor(kBlack);
+        data->SetLineWidth(2);
+
+        mc->Draw("HIST");
+        data->Draw("E1 SAME");
+    }    
+
+    // Plot more suited towards plots w/ large bin sizes relative to dataset (i.e. jets plot)
+    if (plt_typ == "BARS"){
+
+        C->SetLogy(1);
+
+        mc->SetFillColor(38);
+        mc->SetLineColor(kBlue);
+        mc->SetLineWidth(2);
+        data->SetFillStyle(3002);
+        data->SetFillColor(8);
+        data->SetLineColor(kGreen);
+        data->SetLineWidth(2);
+
+        mc->Draw("HIST");
+        data->Draw("HIST SAME");
+            
+    }
+
+    // Legend
+    if (legend_bool == true){
         auto legend = new TLegend(0.9,0.9,0.6,0.6);
         legend->SetHeader("Legend","C"); // option "C" allows to center the header
         legend->AddEntry(mc,"Monte Carlo","f");
@@ -138,11 +130,11 @@ void plotter::bars_plot(TString ref, TString title, int xmin, int xmax){
         legend->Draw();
     }
     
-    C->SaveAs(save_path + ref + save_ext);
-    bars_legend = true; // Reset legend boolean to true (default)
-    
-    return;
+    legend_bool = false; // Reset legend boolean to false (default)
 
+    C->SaveAs(save_path + ref + save_ext);
+
+    return; 
 }
 
 void plotter::adv_plot(TString ref, TString title, int xmin, int xmax){
@@ -320,7 +312,7 @@ void plotter::set_savePath(TString new_path){
 }
 
 void plotter::set_barsLegend(bool new_status){
-    bars_legend = new_status;
+    legend_bool = new_status;
     return;
 }
 
@@ -338,7 +330,7 @@ void adv_plots(){
 
     pltr->adv_plot("met", "Missing Transverse Energy", 0, 200);
 
-    pltr->bars_plot("jets", "Jets for p_{T} > 40", 0, 10);
+    pltr->main_plot("jets", "Jets for p_{T} > 40", 0, 10, "BARS");
 
     pltr->adv_plot("ht", "Hadronic Transverse Momentum", 40, 300);
 
@@ -347,16 +339,16 @@ void adv_plots(){
     pltr->adv_plot("ll_pt", "Loose Lepton Transverse Momentum", 10, 200);
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("lt_phi", "Tight Lepton #phi", -4, 4);
+    pltr->main_plot("lt_phi", "Tight Lepton #phi", -4, 4, "BARS");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("ll_phi", "Loose Lepton #phi", -4, 4);
+    pltr->main_plot("ll_phi", "Loose Lepton #phi", -4, 4, "BARS");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("lt_eta", "Tight Lepton #eta", -4, 4);
+    pltr->main_plot("lt_eta", "Tight Lepton #eta", -4, 4, "BARS");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("ll_eta", "Loose Lepton #eta", -4, 4);
+    pltr->main_plot("ll_eta", "Loose Lepton #eta", -4, 4, "BARS");
 
 
     return;
@@ -369,32 +361,32 @@ void main_plots(){
 
     plotter *pltr = new plotter(f_data, f_mc);
 
-    pltr->set_canvasSize(1200, 900);
-    pltr->main_plot("mass", "Invariant Mass", 0, 200);
+//    pltr->set_canvasSize(1200, 900);
+//    pltr->main_plot("mass", "Invariant Mass", 0, 200, "DEFAULT");
 
-    pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
+//    pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
 
-    pltr->main_plot("met", "Missing Transverse Energy", 0, 200);
+//    pltr->main_plot("met", "Missing Transverse Energy", 0, 200, "DEFAULT")
 
-    pltr->bars_plot("jets", "Jets for p_{T} > 40", 0, 10);
+    pltr->main_plot("jets", "Jets for p_{T} > 40", 0, 10, "BARS");
 
-    pltr->main_plot("ht", "Hadronic Transverse Momentum", 40, 300);
+//    pltr->main_plot("ht", "Hadronic Transverse Momentum", 40, 300, "DEFAULT");
 
-    pltr->main_plot("lt_pt", "Tight Lepton Transverse Momentum", 20, 200);
+//    pltr->main_plot("lt_pt", "Tight Lepton Transverse Momentum", 20, 200, "DEFAULT");
 
-    pltr->main_plot("ll_pt", "Loose Lepton Transverse Momentum", 10, 200);
-
-    pltr->set_barsLegend(false);
-    pltr->bars_plot("lt_phi", "Tight Lepton #phi", -4, 4);
+//    pltr->main_plot("ll_pt", "Loose Lepton Transverse Momentum", 10, 200, "DEFAULT");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("ll_phi", "Loose Lepton #phi", -4, 4);
+    pltr->main_plot("lt_phi", "Tight Lepton #phi", -4, 4, "BARS");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("lt_eta", "Tight Lepton #eta", -4, 4);
+    pltr->main_plot("ll_phi", "Loose Lepton #phi", -4, 4, "BARS");
 
     pltr->set_barsLegend(false);
-    pltr->bars_plot("ll_eta", "Loose Lepton #eta", -4, 4);
+    pltr->main_plot("lt_eta", "Tight Lepton #eta", -4, 4, "BARS");
+
+    pltr->set_barsLegend(false);
+    pltr->main_plot("ll_eta", "Loose Lepton #eta", -4, 4, "BARS");
 
     return;
 }
@@ -403,6 +395,7 @@ void main_plots(){
 void ooplt(){
     
     adv_plots();
+//    main_plots();
 
     return;
 }
