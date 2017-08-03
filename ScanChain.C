@@ -36,11 +36,11 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
     mass->SetDirectory(rootdir);
 
     // Tight Lepton Transverse Momuntum
-    TH1F *lt_pt = new TH1F("lt_pt", "Tight Lepton Transverse Momuntum", 100,0,200);
+    TH1F *lt_pt = new TH1F("lt_pt", "Tight Lepton Transverse Momentum", 100,0,200);
     lt_pt->SetDirectory(rootdir);
 
     // Loose Lepton Transverse Momuntum
-    TH1F *ll_pt = new TH1F("ll_pt", "Loose Lepton Transverse Momuntum", 100,0,200);
+    TH1F *ll_pt = new TH1F("ll_pt", "Loose Lepton Transverse Momentum", 100,0,200);
     ll_pt->SetDirectory(rootdir);
 
     // Missing Transverse Energy
@@ -56,7 +56,7 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
     ht->SetDirectory(rootdir);
 
     // Tight Lepton Phi
-    TH1F *lt_phi = new TH1F("lt_phi", "Tight Lepton Phi", 160,-4, 4);
+    TH1F *lt_phi = new TH1F("lt_phi", "Tight Lepton Phi", 160,-4,4);
     lt_phi->SetDirectory(rootdir);
 
     // Loose Lepton Phi
@@ -123,10 +123,11 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
                     ll_eta      Eta
                     jet_eta
             */
+
             // Trigger
-//            if (!passHLTTriggerPattern("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v10")){
-//                continue;
-//            }
+            if (cms3.evt_isRealData() == 1 && !passHLTTriggerPattern("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v10")){
+                continue;
+            }
 
             // Find best hypothesis
             if (cms3.hyp_lt_id().size() == 0){

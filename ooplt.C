@@ -37,6 +37,7 @@ class plotter{
         // Plotting Functions
         void main_plot(TString, TString, int, int); // Plots histograms with preset options
         void bars_plot(TString, TString, int, int); // Suited for plots with large bins relative to dataset
+        void adv_plot(TString, TString, int, int); // Advanced plot, with ratio plot of data vs mc
         void plot_data(TString, TString, int, int, TString); // Just plots data, plot must be customized manually
         void plot_mc(TString, TString, int, int, TString); // Just plots monte carlo, plot must be customized manually
 
@@ -83,6 +84,9 @@ void plotter::main_plot(TString ref, TString title, int xmin, int xmax){
     mc->SetTitle(title);
     mc->SetFillColor(38);
 
+    // Ensure that first plot accomodates for maximum of second plot
+    mc->SetMaximum(max(mc->GetMaximum(), data->GetMaximum()));
+
     data->SetMarkerStyle(kFullCircle);
     data->SetLineColor(kBlack);
 
@@ -113,6 +117,9 @@ void plotter::bars_plot(TString ref, TString title, int xmin, int xmax){
     mc->GetXaxis()->SetRangeUser(xmin, xmax);
     mc->SetTitle(title);
 
+    // Ensure that first plot accomodates for maximum of second plot
+    mc->SetMaximum(max(mc->GetMaximum(), data->GetMaximum()));
+
     // Normalizing
     mc->Scale(sf);
 
@@ -136,6 +143,91 @@ void plotter::bars_plot(TString ref, TString title, int xmin, int xmax){
     
     return;
 
+}
+
+void plotter::adv_plot(TString ref, TString title, int xmin, int xmax){
+    // Define the Canvas
+    TCanvas *c = new TCanvas(ref, ref, c_width, c_height);
+    data = (TH1F*)f_data->Get(ref)->Clone("data");
+    mc = (TH1F*)f_mc->Get(ref)->Clone("mc");
+
+    gStyle->SetErrorX(0); // Remove x error bars
+
+    // Upper plot will be in pad1
+    TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    pad1->SetBottomMargin(0.125); // Upper and lower plot are separated
+    pad1->SetLeftMargin(0.125);
+    pad1->Draw();             // Draw the upper pad: pad1
+    pad1->cd();               // pad1 becomes the current pad
+    mc->SetStats(0);          // No statistics on upper plot
+
+    // Extra formatting
+    mc->GetXaxis()->SetTitle(get_xLabel(ref));
+    mc->GetYaxis()->SetTitle("Entries");
+    mc->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    // Normalizing
+    mc->Scale(sf);
+
+    // Draw Commands
+    mc->Draw("hist");               // Draw mc
+    data->Draw("e1 same");    // Draw data on top of mc
+
+    // lower plot will be in pad
+    c->cd();          // Go back to the main canvas before defining pad2
+    TPad *pad2 = new TPad("pad2", "pad2", 0, 0.05, 1, 0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.2);
+    pad2->SetLeftMargin(0.125);
+    pad2->SetGridx(); // vertical grid
+    pad2->Draw();
+    pad2->cd();       // pad2 becomes the current pad
+
+    // Define the ratio plot
+    TH1F *ratio = (TH1F*)data->Clone("ratio");
+    ratio->SetLineColor(kBlack);
+    ratio->SetMinimum(0);  // Define Y ..
+    ratio->SetMaximum(2); // .. range
+    ratio->Sumw2();
+    ratio->SetStats(0);      // No statistics on lower plot
+    ratio->Divide(mc);
+    ratio->SetMarkerStyle(21);
+    ratio->Draw("ep");       // Draw the ratio plot
+
+    // mc settings
+    mc->SetLineColor(kBlue);
+    mc->SetFillColor(38);
+    mc->SetLineWidth(2);
+
+    // Y axis mc plot settings
+    mc->GetYaxis()->SetTitleSize(20);
+    mc->GetYaxis()->SetTitleFont(43);
+    mc->GetYaxis()->SetTitleOffset(3.1); // prev 1.55
+
+    // data settings
+    data->SetMarkerStyle(kFullCircle);
+    data->SetLineColor(kBlack);
+
+    // Ratio plot (ratio) settings
+    ratio->SetTitle(""); // Remove the ratio title
+
+    // Y axis ratio plot settings
+    ratio->GetYaxis()->SetTitle("Data/Monte Carlo");
+    ratio->GetYaxis()->SetNdivisions(505);
+    ratio->GetYaxis()->SetTitleSize(20);
+    ratio->GetYaxis()->SetTitleFont(43);
+    ratio->GetYaxis()->SetTitleOffset(1.55);
+    ratio->GetYaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    ratio->GetYaxis()->SetLabelSize(15);
+
+    // X axis ratio plot settings
+    ratio->GetXaxis()->SetTitleSize(20);
+    ratio->GetXaxis()->SetTitleFont(43);
+    ratio->GetXaxis()->SetTitleOffset(4.);
+    ratio->GetXaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    ratio->GetXaxis()->SetLabelSize(15);
+
+    c->SaveAs(save_path + ref + save_ext);
 }
 
 void plotter::plot_data(TString ref, TString title, int xmin, int xmax, TString root_param){
@@ -180,7 +272,7 @@ void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString ro
 
 // Getters
 TString plotter::get_xLabel(TString ref){
-    TString names[11] = {"mass", "small_mass", "met", "ht", "ll_pt", "lt_pt", "ll_phi", "lt_phi", "ll_eta", "let_eta", "jets"};
+    TString names[11] = {"mass", "small_mass", "met", "ht", "ll_pt", "lt_pt", "ll_phi", "lt_phi", "ll_eta", "lt_eta", "jets"};
     TString xlabels[11] = {"GeV", "GeV", "GeV", "GeV", "GeV", "GeV", "Radians", "Radians", "#eta", "#eta", "Number of jets"};
 
     for (unsigned int i = 0; i < 11; i++){
@@ -232,14 +324,52 @@ void plotter::set_barsLegend(bool new_status){
     return;
 }
 
-// Main function
-void ooplt(){
+void adv_plots(){
 
-    TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/looper/data.root");
-    TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/looper/mc.root");
+    TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
+    TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/plotter/mc.root");
 
     plotter *pltr = new plotter(f_data, f_mc);
 
+    pltr->set_canvasSize(1000, 1200);
+    pltr->adv_plot("mass", "Invariant Mass", 0, 200);
+
+    pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
+
+    pltr->adv_plot("met", "Missing Transverse Energy", 0, 200);
+
+    pltr->bars_plot("jets", "Jets for p_{T} > 40", 0, 10);
+
+    pltr->adv_plot("ht", "Hadronic Transverse Momentum", 40, 300);
+
+    pltr->adv_plot("lt_pt", "Tight Lepton Transverse Momentum", 20, 200);
+
+    pltr->adv_plot("ll_pt", "Loose Lepton Transverse Momentum", 10, 200);
+
+    pltr->set_barsLegend(false);
+    pltr->bars_plot("lt_phi", "Tight Lepton #phi", -4, 4);
+
+    pltr->set_barsLegend(false);
+    pltr->bars_plot("ll_phi", "Loose Lepton #phi", -4, 4);
+
+    pltr->set_barsLegend(false);
+    pltr->bars_plot("lt_eta", "Tight Lepton #eta", -4, 4);
+
+    pltr->set_barsLegend(false);
+    pltr->bars_plot("ll_eta", "Loose Lepton #eta", -4, 4);
+
+
+    return;
+}
+
+void main_plots(){
+
+    TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
+    TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/plotter/mc.root");
+
+    plotter *pltr = new plotter(f_data, f_mc);
+
+    pltr->set_canvasSize(1200, 900);
     pltr->main_plot("mass", "Invariant Mass", 0, 200);
 
     pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
@@ -265,6 +395,14 @@ void ooplt(){
 
     pltr->set_barsLegend(false);
     pltr->bars_plot("ll_eta", "Loose Lepton #eta", -4, 4);
+
+    return;
+}
+
+// Main function
+void ooplt(){
+    
+    adv_plots();
 
     return;
 }
