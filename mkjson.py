@@ -21,14 +21,28 @@ def get_name(old_name):
 
     return new_name
 
-os.chdir("/home/users/jguiang/public_html/zpeak/static");
-plots = os.listdir(os.curdir)
+def mkjson():
+    try:
+        pdf_plots = os.listdir(os.getcwd() + "/static/pdfs")
+        png_plots = os.listdir(os.getcwd() + "/static/pngs")
+    except OSError:
+        print("Directories not set up.")
+        return; 
 
-new_json = {}
+    if len(pdf_plots)==0 or len(png_plots)==0:
+        return;
 
-for plt in plots:
-    name = plt.split(".png")[0]
-    new_json[get_name(name)] = "static/"+plt
+    new_json = {"pdfs":{}, "pngs":{}}
 
-with open("/home/users/jguiang/public_html/zpeak/plots.json", "w") as fhout:
-    json.dump(new_json, fhout, sort_keys=True, indent=4, separators=(',',':'))
+    for plt in pdf_plots:
+        name = plt.split(".pdf")[0]
+        new_json["pdfs"][get_name(name)] = "static/pdfs/"+plt
+    for plt in png_plots:
+        name = plt.split(".png")[0]
+        new_json["pngs"][get_name(name)] = "static/pngs/"+plt
+
+    with open("plots.json", "w") as fhout:
+        json.dump(new_json, fhout, sort_keys=True, indent=4, separators=(',',':'))
+
+if __name__ == "__main__":
+    mkjson()
