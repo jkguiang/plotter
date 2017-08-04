@@ -167,11 +167,10 @@ void plotter::adv_plot(TString ref, TString title, int xmin, int xmax){
 
     // lower plot will be in pad
     c->cd();          // Go back to the main canvas before defining pad2
-    TPad *pad2 = new TPad("pad2", "pad2", 0, 0.05, 1, 0.3);
+    TPad *pad2 = new TPad("pad2", "pad2", 0, 0.1, 1, 0.3);
     pad2->SetTopMargin(0);
     pad2->SetBottomMargin(0.2);
     pad2->SetLeftMargin(0.125);
-    pad2->SetGridx(); // vertical grid
     pad2->Draw();
     pad2->cd();       // pad2 becomes the current pad
 
@@ -184,7 +183,7 @@ void plotter::adv_plot(TString ref, TString title, int xmin, int xmax){
     ratio->SetStats(0);      // No statistics on lower plot
     ratio->Divide(mc);
     ratio->SetMarkerStyle(21);
-    ratio->Draw("ep");       // Draw the ratio plot
+    ratio->Draw("PE");       // Draw the ratio plot
 
     // mc settings
     mc->SetLineColor(kBlue);
@@ -322,6 +321,8 @@ void adv_plots(){
     TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/plotter/mc.root");
 
     plotter *pltr = new plotter(f_data, f_mc);
+    pltr->set_saveExtension(".pdf");
+    pltr->set_savePath("/home/users/jguiang/public_html/zpeak/static/pdfs/");
 
     pltr->set_canvasSize(1000, 1200);
     pltr->adv_plot("mass", "Invariant Mass", 0, 200);
