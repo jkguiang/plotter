@@ -17,6 +17,6 @@ plt_type:
 
 run.sh:
 ./run.sh {1}
-    setup - set up directories and files, run doAll.C, run ooplt.C, update web interface
-    plot - run ooplt.C, update web interface
-    scan - run doAll.C
+    1.  setup - set up directories and files, run doAll.C, run ooplt.C, update web interface
+        plot - run ooplt.C, update web interface
+        scan - run doAll.C
