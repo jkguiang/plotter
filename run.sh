@@ -15,9 +15,6 @@ pdf_to_png(){
 
     done
 
-    chmod -R 775 ${pdf_dir}
-    chmod -R 775 ${png_dir}
-
 }
 
 # Check for required files, make directories, run {doAll, ooplt, mkjson}
@@ -39,16 +36,32 @@ setup(){
             mkdir ${main_dir}
             mkdir ${static_dir}
             mkdir ${pdf_dir} ${png_dir}
+
+            # Copy files to proper directories and modify permissions
             cp mkjson.py ${main_dir}
+            chmod 755 ${main_dir}/mkjson.py
+            cp webinterface/plotter.html ${main_dir}
+            chmod 755 ${main_dir}/plotter.html
+            cp webinterface/plotter_main.js ${main_dir}
+            chmod 755 ${main_dir}/plotter_main.js
+            cp webinterface/plotter_style.css ${main_dir}
+            chmod 755 ${main_dir}/plotter_style.css
+
             echo 'Scanning data...'
             root -b -q doAll.C
             echo 'Plotting...'
             root -b -q ooplt.C
+
             echo 'Updating web interface...'
             pdf_to_png ${pdf_dir} ${png_dir} ${png_qual} 
-            python ${main_dir}/mkjson.py
+            chmod -R 755 ${static_dir}
+            chmod -R 755 ${pdf_dir}
+            chmod -R 755 ${png_dir}
+            cd ${main_dir}
+            python mkjson.py
             chmod 755 ${main_dir}/plots.json
             echo 'Finished.'
+            chmod 755 ${main_dir}
             exit 0
         
         else
@@ -76,8 +89,8 @@ plot(){
     root -b -q ooplt.C
     
     # Count pdfs and pngs
-    pdf_count={ ls -1 pdf_dir | wc -l }
-    png_count={ ls -1 png_dir | wc -l }
+    pdf_count="ls -1 ${pdf_dir} | wc -l"
+    png_count="ls -1 ${png_dir} | wc -l"
 
     if [[ ${pdf_count}!=${png_count} ]] ; then
         new_images=(${pdf_count}-${png_count})
@@ -108,16 +121,16 @@ pdf_dir=/home/users/${USER}/public_html/AutoPlotter/static/pdfs
 png_dir=/home/users/${USER}/public_html/AutoPlotter/static/pngs
 png_qual=200
 
-if [[ $1==setup ]] ; then
+if [ "$1" == "setup" ] ; then
     shift
     setup ${main_dir} ${png_qual}
     exit 0
 
-elif [[ $1==plot ]] ; then
+elif [ "$1" == "plot" ] ; then
     shift
     plot ${pdf_dir} ${png_dir} ${png_qual}
     exit 0
-elif [[ $1==scan ]] ; then
+elif [ "$1" == "scan" ] ; then
     shift
     scan
     exit 0

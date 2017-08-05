@@ -1,5 +1,5 @@
-Plots:
-http://uaf-8.t2.ucsd.edu/~jguiang/zpeak/plotter.html#/
+Example Plotter Interface:
+https://github.com/jkguiang/AutoPlotter/blob/master/ooplt.C#L178-L186
 
 Contents:
 ooplt.C - Object-orieted plotter
