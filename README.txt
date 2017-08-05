@@ -14,3 +14,9 @@ xmin, xmax: range of x-axis
 plt_type:
     "DEFAULT" - Monte Carlo plotted in solid blue, data with black markers and errorbars
     "BARS" - Monte Carlo plotted in solid blue, data in transparent green
+
+run.sh:
+./run.sh {1}
+    setup - set up directories and files, run doAll.C, run ooplt.C, update web interface
+    plot - run ooplt.C, update web interface
+    scan - run doAll.C
