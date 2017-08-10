@@ -15,7 +15,7 @@
 #include "TTreeCache.h"
 
 // CMS3
-#include "CMS3.h"
+#include "/home/users/jguiang/CORE/CMS3.h"
 #include "/home/users/jguiang/CORE/MuonSelections.h"
 #include "/home/users/jguiang/CORE/TriggerSelections.h"
 
@@ -124,9 +124,30 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
                     jet_eta
             */
 
-            // Trigger
-            if (cms3.evt_isRealData() == 1 && !passHLTTriggerPattern("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v10")){
-                continue;
+            // Scale factor (to normalize MC), 1 if data
+            double sf = 1;
+            
+            // Data Operations
+            if (cms3.evt_isRealData() == 1){
+
+                // Trigger - only trigger for real data
+                if (!passHLTTriggerPattern("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v10")){
+                    continue;
+                }
+
+            }
+
+            // Monte Carlo Operations
+            if (cms3.evt_isRealData() == 0){
+
+                // Scale Factor
+                double scale1fb = (1000*(cms3.evt_xsec_incl())/(nEventsChain))*cms3.evt_kfactor();
+                
+                // Luminosity 
+                double data_lumi = 24.89/1000; // Calculated in ROOT, not calculated in script
+                
+                double sf = (scale1fb)*(data_lumi);
+
             }
 
             // Find best hypothesis
@@ -208,19 +229,19 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
 
 
             // Fill Histograms
-            jets->Fill(jetSum);
+            jets->Fill(jetSum, sf);
             if (htSum > 0){
-                ht->Fill(htSum);
+                ht->Fill(htSum, sf);
             }
-            met->Fill(cms3.evt_pfmet());
-            mass->Fill(cms3.hyp_p4().at(bhi).M());
-            small_mass->Fill(cms3.hyp_p4().at(bhi).M());
-            lt_pt->Fill(cms3.hyp_lt_p4().at(bhi).pt());
-            ll_pt->Fill(cms3.hyp_ll_p4().at(bhi).pt());
-            lt_phi->Fill(cms3.hyp_lt_p4().at(bhi).phi());
-            ll_phi->Fill(cms3.hyp_ll_p4().at(bhi).phi());
-            lt_eta->Fill(cms3.hyp_lt_p4().at(bhi).eta());
-            ll_eta->Fill(cms3.hyp_ll_p4().at(bhi).eta());
+            met->Fill(cms3.evt_pfmet()*sf);
+            mass->Fill(cms3.hyp_p4().at(bhi).M(), sf);
+            small_mass->Fill(cms3.hyp_p4().at(bhi).M(), sf);
+            lt_pt->Fill(cms3.hyp_lt_p4().at(bhi).pt(), sf);
+            ll_pt->Fill(cms3.hyp_ll_p4().at(bhi).pt(), sf);
+            lt_phi->Fill(cms3.hyp_lt_p4().at(bhi).phi(), sf);
+            ll_phi->Fill(cms3.hyp_ll_p4().at(bhi).phi(), sf);
+            lt_eta->Fill(cms3.hyp_lt_p4().at(bhi).eta(), sf);
+            ll_eta->Fill(cms3.hyp_ll_p4().at(bhi).eta(), sf);
 
         }
   

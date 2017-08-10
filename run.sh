@@ -8,12 +8,17 @@ pdf_to_png(){
 
     # $1=pdf_dir, $2=png_dir, $3=png_qual
 
+    echo -n "Working: ["
     for file in ${1}/*.pdf ; do
         
         pdf_name=${file##*/}
         convert -density ${3} -fuzz 1% $file ${2}/${pdf_name%.pdf}.png
+        echo -n "#"
 
     done
+
+    echo -n "]"
+    echo " "
 
 }
 
@@ -87,23 +92,17 @@ plot(){
     
     echo 'Plotting...'
     root -b -q ooplt.C
-    
-    # Count pdfs and pngs
-    pdf_count="ls -1 ${pdf_dir} | wc -l"
-    png_count="ls -1 ${png_dir} | wc -l"
 
-    if [[ ${pdf_count}!=${png_count} ]] ; then
-        new_images=(${pdf_count}-${png_count})
-        echo "${new_images} new plots made."
-        echo 'Updating web interface...'
-        pdf_to_png ${pdf_dir} ${png_dir} ${png_qual}
-        echo 'Finished.'
-        exit 0
+    echo 'Updating web interface...'
+    rm -r ${png_dir}
+    mkdir ${png_dir}
+    pdf_to_png ${pdf_dir} ${png_dir} ${png_qual}
+    chmod -R 755 ${png_dir}
+    echo 'Finished.'
+    exit 0
 
-    else
-        echo 'No new images created'
-        exit 0
-    fi
+    echo 'No new images created'
+    exit 0
 
 }
 
