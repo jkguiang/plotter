@@ -20,6 +20,7 @@ class plotter{
     TH1F* data;
     TH1F* mc;
     vector<TFile*> stackPile;
+    vector<TString> stackNames;
 
     int c_width; // Canvas width
     int c_height; // Canvas height
@@ -41,7 +42,7 @@ class plotter{
         void plot_data(TString, TString, int, int, TString); // Just plots data, plot must be customized manually
         void plot_mc(TString, TString, int, int, TString); // Just plots monte carlo, plot must be customized manually
 
-        void add_toStack(TString);
+        void add_toStack(TString, TString);
         void plot_stack(TString, TString, int, int);
 
         // Getters
@@ -291,10 +292,11 @@ void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString ro
     return;
 }
 
-void plotter::add_toStack(TString new_mcPath){
+void plotter::add_toStack(TString new_mcPath, TString new_name){
 
     TFile *new_fmc = new TFile(new_mcPath);
     stackPile.push_back(new_fmc);
+    stackNames.push_back(new_name);
 
     return;
 }
@@ -309,11 +311,24 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
     // Initialize Stack
     THStack *stack = new THStack("stack", title);
 
+    // Upper plot will be in pad1
+    TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    pad1->SetBottomMargin(0.125); // Upper and lower plot are separated
+    pad1->SetLeftMargin(0.125);
+    pad1->Draw();             // Draw the upper pad: pad1
+    pad1->cd();               // pad1 becomes the current pad
+
+    // Legend
+    auto legend = new TLegend(0.9,0.9,0.6,0.6);
+    legend->SetHeader("Legend","C"); // option "C" allows to center the header
+
     // Data file: f_data
     data = (TH1F*)f_data->Get(ref)->Clone("data");
     data->SetMarkerStyle(kFullCircle);
     data->SetLineColor(kBlack);
     data->SetLineWidth(2);
+    legend->AddEntry(data, "Data", "f");
+
 
     int colors[] = {3, 9, 7, 28, 46};
     // Parse over  mc files, plot histograms, then push to stack
@@ -321,6 +336,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
         TString new_name = "mc" + (TString)((char)i);
         mc = (TH1F*)stackPile[i]->Get(ref)->Clone(new_name);
         mc->SetFillColor(colors[i]);
+        legend->AddEntry(mc, stackNames[i], "f");
         stack->Add(mc);
     }
 
@@ -328,9 +344,57 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
     stack->Draw("SAME");
     data->Draw("PE SAME");
 
-    // Set stack properties
+    // Draw Legend
+    legend->Draw();
+
+    // lower plot will be in pad
+    C->cd();          // Go back to the main canvas before defining pad2
+    TPad *pad2 = new TPad("pad2", "pad2", 0, 0.1, 1, 0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.2);
+    pad2->SetLeftMargin(0.125);
+    pad2->Draw();
+    pad2->cd();       // pad2 becomes the current pad
+
+    // Define the ratio plot
+    TH1F *ratio = (TH1F*)data->Clone("ratio");
+    ratio->SetLineColor(kBlack);
+    ratio->SetMinimum(0);  // Define Y ..
+    ratio->SetMaximum(2); // .. range
+    ratio->Sumw2();
+    ratio->SetStats(0);      // No statistics on lower plot
+    ratio->Divide(mc);
+    ratio->SetMarkerStyle(21);
+    ratio->Rebin(ratio_rebin);
+    ratio->Draw("PE");       // Draw the ratio plot
+
+    // Y axis stack plot settings
+    stack->GetYaxis()->SetTitleSize(20);
+    stack->GetYaxis()->SetTitleFont(43);
+    stack->GetYaxis()->SetTitleOffset(3.1); // prev 1.55
+    // X axis stack plot settings
     stack->GetXaxis()->SetTitle(get_xLabel(ref));
     stack->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    // Ratio plot (ratio) settings
+    ratio->SetTitle(""); // Remove the ratio title
+
+    // Y axis ratio plot settings
+    ratio->GetYaxis()->SetTitle("Data/Monte Carlo");
+    ratio->GetYaxis()->SetNdivisions(505);
+    ratio->GetYaxis()->SetTitleSize(20);
+    ratio->GetYaxis()->SetTitleFont(43);
+    ratio->GetYaxis()->SetTitleOffset(1.55);
+    ratio->GetYaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    ratio->GetYaxis()->SetLabelSize(15);
+
+    // X axis ratio plot settings
+    ratio->GetXaxis()->SetTitleSize(20);
+    ratio->GetXaxis()->SetTitleFont(43);
+    ratio->GetXaxis()->SetTitleOffset(4.);
+    ratio->GetXaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    ratio->GetXaxis()->SetLabelSize(15);
+    ratio->GetXaxis()->SetRangeUser(xmin, xmax);
 
     C->SaveAs(save_path + ref + save_ext);
 
@@ -423,9 +487,11 @@ void stacks(){
     plotter *pltr = new plotter(f_data, NULL);
     pltr->set_saveExtension(".pdf");
     pltr->set_savePath("/home/users/jguiang/public_html/AutoPlotter/static/pdfs/");
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root");
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M10to50.root");
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_TT.root");
+    pltr->set_canvasSize(1000, 1200);
+    
+    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root", "DY M > 50");
+    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M10to50.root", "DY 10 < M < 50");
+    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_TT.root", "T#bar{T}");
 
     pltr->plot_stack("mass", "Invariant Mass", 0, 200);
 
