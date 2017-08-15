@@ -146,7 +146,16 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
                 // Luminosity 
                 double data_lumi = 24.89/1000; // Calculated in ROOT, not calculated in script
                 
-                double sf = (scale1fb)*(data_lumi);
+                sf = (scale1fb)*(data_lumi);
+
+                if (nEventsTotal == 2){
+                    cout << scale1fb << endl;
+                    cout << data_lumi << endl;
+                    cout << nEventsChain << endl;
+                    cout << cms3.evt_xsec_incl() << endl;
+                    cout << cms3.evt_kfactor() << endl;
+                }
+
 
             }
 
@@ -233,7 +242,7 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
             if (htSum > 0){
                 ht->Fill(htSum, sf);
             }
-            met->Fill(cms3.evt_pfmet()*sf);
+            met->Fill(cms3.evt_pfmet(), sf);
             mass->Fill(cms3.hyp_p4().at(bhi).M(), sf);
             small_mass->Fill(cms3.hyp_p4().at(bhi).M(), sf);
             lt_pt->Fill(cms3.hyp_lt_p4().at(bhi).pt(), sf);

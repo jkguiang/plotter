@@ -98,6 +98,7 @@ plot(){
     mkdir ${png_dir}
     pdf_to_png ${pdf_dir} ${png_dir} ${png_qual}
     chmod -R 755 ${png_dir}
+    chmod -R 755 ${pdf_dir}
     echo 'Finished.'
     exit 0
 
@@ -118,7 +119,7 @@ scan(){
 main_dir=/home/users/${USER}/public_html/AutoPlotter
 pdf_dir=/home/users/${USER}/public_html/AutoPlotter/static/pdfs
 png_dir=/home/users/${USER}/public_html/AutoPlotter/static/pngs
-png_qual=200
+png_qual=50
 
 if [ "$1" == "setup" ] ; then
     shift

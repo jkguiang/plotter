@@ -8,9 +8,17 @@
 //C++ includes
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 
 using namespace std;
+
+struct plot{
+
+    TH1F* hist;
+    double integral;
+
+};
 
 class plotter{
     
@@ -19,7 +27,7 @@ class plotter{
     TFile* f_mc;
     TH1F* data;
     TH1F* mc;
-    vector<TFile*> stackPile;
+    vector<TFile*> pathPile;
     vector<TString> stackNames;
 
     int c_width; // Canvas width
@@ -30,6 +38,7 @@ class plotter{
 
     // Plot Specific Variables
     bool legend_bool;
+    bool logY_bool;
     int ratio_rebin;
 
     public:
@@ -42,8 +51,8 @@ class plotter{
         void plot_data(TString, TString, int, int, TString); // Just plots data, plot must be customized manually
         void plot_mc(TString, TString, int, int, TString); // Just plots monte carlo, plot must be customized manually
 
-        void add_toStack(TString, TString);
-        void plot_stack(TString, TString, int, int);
+        void add_toPaths(TString, TString);
+        void plot_stack(TString, TString, int, int, TString);
 
         // Getters
         TString get_xLabel(TString);
@@ -53,6 +62,7 @@ class plotter{
         void set_saveExtension(TString);
         void set_savePath(TString);
         void set_ratioRebin(int);
+        void set_logY(bool);
 
         // Plot Specific Setters
         void set_barsLegend(bool); // true = on, false = off
@@ -63,15 +73,16 @@ plotter::plotter(TFile* new_fdata, TFile* new_fmc){
 
     f_data = new_fdata;
     f_mc = new_fmc;
-    stackPile = {};
+    pathPile = {};
 
-    c_width = 1200;
-    c_height = 900;
+    c_width = 1000;
+    c_height = 1200;
 
-    save_ext = ".png";
-    save_path = "/home/users/jguiang/public_html/zpeak/static/";
+    save_ext = ".pdf";
+    save_path = "/home/users/jguiang/public_html/AutoPlotter/static/pdfs/";
 
     legend_bool = false;
+    logY_bool = false;
     ratio_rebin = 1;
 }
 
@@ -292,16 +303,16 @@ void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString ro
     return;
 }
 
-void plotter::add_toStack(TString new_mcPath, TString new_name){
+void plotter::add_toPaths(TString new_mcPath, TString new_name){
 
     TFile *new_fmc = new TFile(new_mcPath);
-    stackPile.push_back(new_fmc);
+    pathPile.push_back(new_fmc);
     stackNames.push_back(new_name);
 
     return;
 }
 
-void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
+void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString opt){
     
     // Initialize Canvas
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
@@ -314,45 +325,116 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
     // Upper plot will be in pad1
     TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
     pad1->SetBottomMargin(0.125); // Upper and lower plot are separated
-    pad1->SetLeftMargin(0.125);
+    pad1->SetLeftMargin(0.140);
     pad1->Draw();             // Draw the upper pad: pad1
     pad1->cd();               // pad1 becomes the current pad
 
     // Legend
-    auto legend = new TLegend(0.9,0.9,0.6,0.6);
-    legend->SetHeader("Legend","C"); // option "C" allows to center the header
+    auto legend = new TLegend(0.9,0.9,0.7,0.8);
+    legend->SetHeader("","C"); // option "C" allows to center the header
 
     // Data file: f_data
     data = (TH1F*)f_data->Get(ref)->Clone("data");
     data->SetMarkerStyle(kFullCircle);
     data->SetLineColor(kBlack);
     data->SetLineWidth(2);
-    legend->AddEntry(data, "Data", "f");
+    int data_bins = data->GetNbinsX();  // For use in ratio plot
+    int orig_xmax = data->GetXaxis()->GetXmax();  // For use in ratio plot
+    int orig_xmin = data->GetXaxis()->GetXmin();  // For use in ratio plot
+    legend->AddEntry(data, "Data", "PE");
 
+    // Y axis stack plot settings
+    data->GetYaxis()->SetTitle("Entries");
+    // X axis stack plot settings
+    data->GetXaxis()->SetTitle(get_xLabel(ref));
+    data->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    int colors[] = {3, 9, 7, 28, 46};
-    // Parse over  mc files, plot histograms, then push to stack
-    for (unsigned int i = 0; i < stackPile.size(); i++){
+    // Create new histo to collect all mc for ratio plot
+    TH1F * mc_merged = new TH1F("merged", "merged_hists", data_bins, orig_xmin, orig_xmax);
+    int colors[] = {7, 3, 9, 28, 46};
+    // parse over  mc files, plot histograms, then push to stack
+    vector<plot> plots;
+    for (unsigned int i = 0; i < pathPile.size(); i++){
+        plot new_plot;
+        plots.push_back(new_plot);
+
         TString new_name = "mc" + (TString)((char)i);
-        mc = (TH1F*)stackPile[i]->Get(ref)->Clone(new_name);
-        mc->SetFillColor(colors[i]);
-        legend->AddEntry(mc, stackNames[i], "f");
-        stack->Add(mc);
+        TH1F* new_mc = (TH1F*)pathPile[i]->Get(ref)->Clone(new_name);
+        new_mc->SetFillColor(colors[i]);
+        legend->AddEntry(new_mc, stackNames[i], "f");
+        mc_merged->Add(new_mc);
+
+        // Update plots array
+        plots.at(i).hist = new_mc;
+        plots.at(i).integral = new_mc->Integral();
     }
 
+    // Plot Organization
+    if (opt == "DEFAULT"){
+        for (unsigned int i = 0; i < plots.size(); i++){
+            stack->Add(plots.at(i).hist);
+        }
+    }
+    else {
+        vector<double> integrals;
+        vector<TH1F*> sort_hists;
+
+        for (unsigned int i = 0; i < plots.size(); i++){
+            integrals.push_back(plots.at(i).integral);
+        }
+
+        sort(integrals.begin(), integrals.end(), greater<double>());
+        
+        for (unsigned int i = 0; i < integrals.size(); i++){
+            for (unsigned int j = 0; j < plots.size(); j++){
+            
+                if (integrals[i] == plots.at(j).integral){
+                    sort_hists.push_back(plots.at(j).hist);
+                }
+            
+            }
+        }
+        
+        if (opt == "G"){
+            for (unsigned int i = 0; i < sort_hists.size(); i++){
+                stack->Add(sort_hists.at(i));
+            }
+        }
+
+        else if (opt == "L"){
+            reverse(sort_hists.begin(), sort_hists.end());
+            for (unsigned int i = 0; i < sort_hists.size(); i++){
+                stack->Add(sort_hists.at(i));
+            }
+        }
+    } // End else statement
+
     data->Draw("PE");
-    stack->Draw("SAME");
+    stack->Draw("SAME HIST");
     data->Draw("PE SAME");
 
+    // Ensure that first plot accomodates for maximum of second plot with space for legend, and minimum to ensure all data is drawn
+    data->SetMaximum(max(stack->GetMaximum(), data->GetMaximum()));
+    data->SetMinimum(0.5);
+
     // Draw Legend
+    legend->SetBorderSize(0);
+    legend->SetFillStyle(0);
     legend->Draw();
+
+    // Set log scale if requested
+    if (logY_bool == true){
+        pad1->SetLogy(1);
+        logY_bool = false;
+    }
+    
 
     // lower plot will be in pad
     C->cd();          // Go back to the main canvas before defining pad2
     TPad *pad2 = new TPad("pad2", "pad2", 0, 0.1, 1, 0.3);
-    pad2->SetTopMargin(0);
+    pad2->SetTopMargin(0.1);
     pad2->SetBottomMargin(0.2);
-    pad2->SetLeftMargin(0.125);
+    pad2->SetLeftMargin(0.140);
     pad2->Draw();
     pad2->cd();       // pad2 becomes the current pad
 
@@ -363,18 +445,17 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
     ratio->SetMaximum(2); // .. range
     ratio->Sumw2();
     ratio->SetStats(0);      // No statistics on lower plot
-    ratio->Divide(mc);
+
+    ratio->Divide(mc_merged);
     ratio->SetMarkerStyle(21);
     ratio->Rebin(ratio_rebin);
+    ratio_rebin = 1;
     ratio->Draw("PE");       // Draw the ratio plot
 
     // Y axis stack plot settings
-    stack->GetYaxis()->SetTitleSize(20);
-    stack->GetYaxis()->SetTitleFont(43);
-    stack->GetYaxis()->SetTitleOffset(3.1); // prev 1.55
-    // X axis stack plot settings
-    stack->GetXaxis()->SetTitle(get_xLabel(ref));
-    stack->GetXaxis()->SetRangeUser(xmin, xmax);
+    data->GetYaxis()->SetTitleSize(20);
+    data->GetYaxis()->SetTitleFont(43);
+    data->GetYaxis()->SetTitleOffset(3.1); // prev 1.55
 
     // Ratio plot (ratio) settings
     ratio->SetTitle(""); // Remove the ratio title
@@ -389,15 +470,20 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax){
     ratio->GetYaxis()->SetLabelSize(15);
 
     // X axis ratio plot settings
-    ratio->GetXaxis()->SetTitleSize(20);
-    ratio->GetXaxis()->SetTitleFont(43);
-    ratio->GetXaxis()->SetTitleOffset(4.);
-    ratio->GetXaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
-    ratio->GetXaxis()->SetLabelSize(15);
     ratio->GetXaxis()->SetRangeUser(xmin, xmax);
+    ratio->GetXaxis()->SetTitle("");
+
+    // Draw horizontal line at 1
+    TLine *line = new TLine(xmin, 1, xmax, 1);
+    line->Draw("SAME");
+    gStyle->SetLineStyle(7);
 
     C->SaveAs(save_path + ref + save_ext);
 
+    // Delete hists to avoid "memory leak" errors
+    delete mc_merged;
+
+    return;
 }
 
 
@@ -444,16 +530,18 @@ void plotter::set_ratioRebin(int new_ratio_rebin){
     return;
 }
 
+void plotter::set_logY(bool new_status){
+    logY_bool = new_status;
+    return;
+}
+
 void Z_M50(){
 
     TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
     TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root");
 
     plotter *pltr = new plotter(f_data, f_mc);
-    pltr->set_saveExtension(".pdf");
-    pltr->set_savePath("/home/users/jguiang/public_html/AutoPlotter/static/pdfs/");
 
-    pltr->set_canvasSize(1000, 1200);
     pltr->ratio_plot("mass", "Invariant Mass", 0, 200, "DEFAULT");
 
     pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
@@ -485,15 +573,37 @@ void stacks(){
     TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
 
     plotter *pltr = new plotter(f_data, NULL);
-    pltr->set_saveExtension(".pdf");
-    pltr->set_savePath("/home/users/jguiang/public_html/AutoPlotter/static/pdfs/");
-    pltr->set_canvasSize(1000, 1200);
     
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root", "DY M > 50");
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M10to50.root", "DY 10 < M < 50");
-    pltr->add_toStack("/home/users/jguiang/projects/zpeak/plotter/mc_TT.root", "T#bar{T}");
+    // Add MC to stack
+    pltr->add_toPaths("/home/users/jguiang/projects/zpeak/plotter/mc_TT.root", "T#bar{T}");
+    pltr->add_toPaths("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root", "DY M > 50");
+    pltr->add_toPaths("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M10to50.root", "DY 10 < M < 50");
 
-    pltr->plot_stack("mass", "Invariant Mass", 0, 200);
+    // Plot stacks
+    pltr->plot_stack("mass", "Invariant Mass", 0, 200, "L");
+
+    pltr->plot_stack("ht", "Hadronic Transverse Momentum", 40, 200, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("jets", "Jets for p_{T} > 40", 0, 10, "L");
+    
+    pltr->plot_stack("met", "Missing Transverse Energy", 0, 200, "L");
+    
+    pltr->plot_stack("lt_pt", "Tight Lepton Transverse Momentum", 20, 200, "L");
+
+    pltr->plot_stack("ll_pt", "Loose Lepton Transverse Momentum", 10, 200, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("lt_phi", "Tight Lepton #phi", -4, 4, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("ll_phi", "Loose Lepton #phi", -4, 4, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("lt_eta", "Tight Lepton #eta", -4, 4, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("ll_eta", "Loose Lepton #eta", -4, 4, "L");
 
     return;
 }
