@@ -1,5 +1,5 @@
 Example Plotter Interface:
-http://uaf-8.t2.ucsd.edu/~jguiang/AutoPlotter/plotter.html
+http://uaf-8.t2.ucsd.edu/~jguiang/AutoPlotter
 
 Contents:
 ooplt.C - Object-orieted plotter
