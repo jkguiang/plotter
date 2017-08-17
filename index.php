@@ -29,14 +29,15 @@
 
             $cwd = getcwd();
 
-            $png_path = ("/static/pngs/");
-            $pdf_path = ("/static/pdfs/");
+            $png_path = ("static/pngs/");
+            $pdf_path = ("static/pdfs/");
 
-            $pngs = scandir($cwd . $png_path);
-            $pdfs = scandir($cwd . $pdf_path);
+            $pngs = scandir($cwd . "/" . $png_path);
+            $pdfs = scandir($cwd . "/" . $pdf_path);
             
             // Fill JSON
             for ($i = 0; $i < count($pngs); $i++) {
+                if ($pngs[$i] == '.' || $pngs[$i] == '..') continue;
                 newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i]);
             }
 
@@ -54,6 +55,7 @@
 
             function load_page(php_out) {
                 var data = make_json(php_out);
+                filter(data);
                 fill_sections(data);
             }
 
@@ -64,40 +66,73 @@
                     var img_obj = php_out[i];
                     var png_path = img_obj["png_path"];
                     var pdf_path = img_obj["pdf_path"];
-                    var name = "Image" + i;
+                    var name = png_path.split('/').reverse()[0].split('.')[0];
 
                     new_json.push({
                         "name": name,
                         "png_path": png_path,
                         "pdf_path": pdf_path,
+                        "hidden": false,
                     });
                 }                
                 
                 return new_json;
             }
 
+            function refresh() {
+                load_page(php_out);
+            }
+
+            function filter(data) {
+
+                var input = document.getElementById('search');
+                var search = input.value.toLowerCase();
+
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i]["name"].toLowerCase().indexOf(search) < 0) {
+                        console.log(search);
+                        console.log("hid "+data[i]["name"])
+                        data[i]["hidden"] = true;
+                    }
+                }
+
+                return data;
+            }
+
             function set_grid(data) {
                 var container = $("#section_1");
+                var counter = 0;
+
+                container.html("");
 
                 for (var i = 0; i < data.length; i+=3) {
                     var toappend = "";
 
                     //Draw thumbnails
                     toappend += "<div class='row'>";
-                    toappend +=     ("<div id=grid_" + i + " class='col-lg-4'></div>");
-                    toappend +=     ("<div id=grid_" + (i + 1) + " class='col-lg-4'></div>");
-                    toappend +=     ("<div id=grid_" + (i + 2) + " class='col-lg-4'></div>");
+                    toappend += "   <div class='text-center'>"
+                    for (var j = 0; j < 3; j++){
+                        if (counter > data.length) return;
+                        toappend +=     ("<div id=grid_" + (i + j) + " class='col-lg-4'></div>");
+                        counter++;
+                    }
+                    toappend += "   </div>"
                     toappend += "</div>";
-
                     container.append(toappend);
                 }
             }
 
             function fill_grid(data) {
 
+                var counter = 0;
+
                 for (var i = 0; i < data.length; i++) {
-                    $("#grid_" + i).append("<a href="+data[i]["pdf_path"]+"><img src="+data[i]["png_path"]+" width=200 height=240></a>");
-                    i++;
+                    if (data[i]["hidden"]) {
+                        continue;
+                    }
+                    $("#grid_" + counter).append("<h3>"+data[i]["name"]+"</h3>");
+                    $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><img src="+data[i]["png_path"]+" width=200 height=240></a>");
+                    counter++;
                 }
             }
 
@@ -107,7 +142,6 @@
             }
 
         </script>
-        <!--<script src="plotter_main.js"></script>-->
     </head>
 
     <body>
@@ -127,9 +161,9 @@
                 <div id="navbar" class="collapse navbar-collapse">
                     <form class="navbar-form navbar-right">
                         <div class="form-group">
-                            <input type="text" id="search" placeholder="Search" class="form-control">
+                            <input type="text" id="search" onkeyup="refresh()" placeholder="Search" class="form-control">
                         </div>
-                        <button type="submit" class="btn btn-success">Search</button>
+                        <button type="submit" id="search_button" class="btn btn-success">Search</button>
                     </form>
                 </div><!--/.nav-collapse -->
             </div><!-- end navbar  -->

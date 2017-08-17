@@ -43,14 +43,8 @@ setup(){
             mkdir ${pdf_dir} ${png_dir}
 
             # Copy files to proper directories and modify permissions
-            cp mkjson.py ${main_dir}
-            chmod 755 ${main_dir}/mkjson.py
-            cp webinterface/plotter.html ${main_dir}
-            chmod 755 ${main_dir}/plotter.html
-            cp webinterface/plotter_main.js ${main_dir}
-            chmod 755 ${main_dir}/plotter_main.js
-            cp webinterface/plotter_style.css ${main_dir}
-            chmod 755 ${main_dir}/plotter_style.css
+            cp index.php ${main_dir}
+            chmod 755 ${main_dir}/index.php
 
             echo 'Scanning data...'
             root -b -q doAll.C
@@ -63,8 +57,6 @@ setup(){
             chmod -R 755 ${pdf_dir}
             chmod -R 755 ${png_dir}
             cd ${main_dir}
-            python mkjson.py
-            chmod 755 ${main_dir}/plots.json
             echo 'Finished.'
             chmod 755 ${main_dir}
             exit 0
