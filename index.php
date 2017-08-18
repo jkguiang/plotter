@@ -10,8 +10,36 @@
 
  
         <!-- My Code -->
+        
+        <!-- CSS -->
+        <style>
+            img:hover {
+                border: 1px solid #cecece;
+            }
 
-        <!--PHP-->
+            .jumbotron-billboard .main {
+                margin-bottom: 0px;
+                opacity: 0.2;
+                color: #fff;
+                background: #000 url("") center center;
+                width: 100%;
+                height: 100%;
+                background-size: cover;
+                overflow: hidden;
+
+
+                  position:absolute;
+                  top:0;left:0;
+                    z-index:1;
+                  }
+            .jumbotron {position:relative;padding:50px;}
+            .jumbotron .container {z-index:2;
+             position:relative;
+              z-index:2;
+            }
+        </style>
+
+        <!-- PHP -->
         <?php
 
             $images = array();
@@ -43,7 +71,7 @@
 
         ?>
 
-        <!--JQuery-->
+        <!-- JQuery -->
         <script type="text/javascript">
 
             var php_out = <?php echo json_encode($images); ?>;
@@ -130,8 +158,8 @@
                     if (data[i]["hidden"]) {
                         continue;
                     }
-                    $("#grid_" + counter).append("<h3>"+data[i]["name"]+"</h3>");
-                    $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><img src="+data[i]["png_path"]+" width=200 height=240></a>");
+                    $("#grid_" + counter).append("<h4>"+data[i]["name"]+"</h4><a href="+data[i]["pdf_path"]+"><img src="+data[i]["png_path"]+" width=200 height=240></a>");
+                    $("#grid_" + counter).append("");
                     counter++;
                 }
             }
@@ -171,7 +199,9 @@
         </nav>
 
         <!-- Jumbotron -->
-        <div class="jumbotron">
+        <div id="jumbo" class="jumbotron jumbotron-billboard">
+            <div class="main"></div>
+            <p><br /><p>
             <div class="container">
                 <h1>AutoPlotter</h1>
                 <p>Click on any of the thumbnails below to view the full pdf of your plot or click the button below to view the Github page for AutoPlotter.</p>

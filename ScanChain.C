@@ -32,47 +32,47 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
     TDirectory *rootdir = gDirectory->GetDirectory("Rint:");
 
     // Invariant Mass
-    TH1F *mass = new TH1F("mass", "Invariant Mass", 100,0,200);
+    TH1F *mass = new TH1F("mass", "", 100,0,200);
     mass->SetDirectory(rootdir);
 
     // Tight Lepton Transverse Momuntum
-    TH1F *lt_pt = new TH1F("lt_pt", "Tight Lepton Transverse Momentum", 100,0,200);
+    TH1F *lt_pt = new TH1F("lt_pt", "", 100,0,200);
     lt_pt->SetDirectory(rootdir);
 
     // Loose Lepton Transverse Momuntum
-    TH1F *ll_pt = new TH1F("ll_pt", "Loose Lepton Transverse Momentum", 100,0,200);
+    TH1F *ll_pt = new TH1F("ll_pt", "", 100,0,200);
     ll_pt->SetDirectory(rootdir);
 
     // Missing Transverse Energy
-    TH1F *met = new TH1F("met", "Missing Transverse Energy", 100,0,200);
+    TH1F *met = new TH1F("met", "", 100,0,200);
     met->SetDirectory(rootdir);
 
     // Jets for pt > 40
-    TH1F *jets = new TH1F("jets", "Jets for p_{T} > 40", 10,0,10);
+    TH1F *jets = new TH1F("jets", "", 10,0,10);
     jets->SetDirectory(rootdir);
 
     // Hadronic Transverse Momentum
-    TH1F *ht = new TH1F("ht", "H_{T} for p_{T} > 40", 150,0,300);
+    TH1F *ht = new TH1F("ht", "", 150,0,300);
     ht->SetDirectory(rootdir);
 
     // Tight Lepton Phi
-    TH1F *lt_phi = new TH1F("lt_phi", "Tight Lepton Phi", 160,-4,4);
+    TH1F *lt_phi = new TH1F("lt_phi", "", 160,-4,4);
     lt_phi->SetDirectory(rootdir);
 
     // Loose Lepton Phi
-    TH1F *ll_phi = new TH1F("ll_phi", "Loose Lepton Phi", 160,-4,4);
+    TH1F *ll_phi = new TH1F("ll_phi", "", 160,-4,4);
     ll_phi->SetDirectory(rootdir);
 
     // Tight Lepton Eta
-    TH1F *lt_eta = new TH1F("lt_eta", "Tight Lepton Eta", 160,-4,4);
+    TH1F *lt_eta = new TH1F("lt_eta", "", 160,-4,4);
     lt_eta->SetDirectory(rootdir);
 
     // Loose Lepton Eta
-    TH1F *ll_eta = new TH1F("ll_eta", "Loose Lepton Eta", 160,-4,4);
+    TH1F *ll_eta = new TH1F("ll_eta", "", 160,-4,4);
     ll_eta->SetDirectory(rootdir);
 
     // Small Masses
-    TH1F *small_mass = new TH1F("small_mass", "Upsilon and JPsi", 100,0,20);
+    TH1F *small_mass = new TH1F("small_mass", "", 100,0,20);
     small_mass->SetDirectory(rootdir);
 
     // Loop over events to Analyze
@@ -149,11 +149,11 @@ int ScanChain(TChain* chain, char sample_name[], bool fast = true, int nEvents =
                 sf = (scale1fb)*(data_lumi);
 
                 if (nEventsTotal == 2){
-                    cout << scale1fb << endl;
-                    cout << data_lumi << endl;
-                    cout << nEventsChain << endl;
-                    cout << cms3.evt_xsec_incl() << endl;
-                    cout << cms3.evt_kfactor() << endl;
+                    cout << "Scale1fb: " << scale1fb << " fb" << endl;
+                    cout << "Data Luminocity: " << data_lumi << " fb^(-1)" << endl;
+                    cout << "nEvents: " << nEventsChain << endl;
+                    cout << "Cross Section: " << cms3.evt_xsec_incl() << " pb" << endl;
+                    cout << "K-factor: " << cms3.evt_kfactor() << endl;
                 }
 
 

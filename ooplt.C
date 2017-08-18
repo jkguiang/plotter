@@ -13,14 +13,14 @@
 
 using namespace std;
 
-struct plot{
+struct plot {
 
     TH1F* hist;
     double integral;
 
 };
 
-class plotter{
+class plotter {
     
     // Member Variables
     TFile* f_data;
@@ -69,7 +69,7 @@ class plotter{
 
 };
 
-plotter::plotter(TFile* new_fdata, TFile* new_fmc){
+plotter::plotter(TFile* new_fdata, TFile* new_fmc) {
 
     f_data = new_fdata;
     f_mc = new_fmc;
@@ -87,7 +87,7 @@ plotter::plotter(TFile* new_fdata, TFile* new_fmc){
 }
 
 // Plotting Functions
-void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString plt_typ){
+void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString plt_typ) {
 
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
     data = (TH1F*)f_data->Get(ref)->Clone("data");
@@ -104,7 +104,7 @@ void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString
     mc->SetMaximum(max(mc->GetMaximum(), data->GetMaximum()));
 
     // Default plot: MC -> blue solid fill, Data -> black markers w/ errorbars
-    if (plt_typ == "DEFAULT"){
+    if (plt_typ == "DEFAULT") {
 
         mc->SetFillColor(38);
         mc->SetLineColor(kBlue);
@@ -118,7 +118,7 @@ void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString
     }    
 
     // Plot more suited towards plots w/ large bin sizes relative to dataset (i.e. jets plot)
-    if (plt_typ == "BARS"){
+    if (plt_typ == "BARS") {
 
         C->SetLogy(1);
 
@@ -136,7 +136,7 @@ void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString
     }
 
     // Legend
-    if (legend_bool == true){
+    if (legend_bool == true) {
         auto legend = new TLegend(0.9,0.9,0.6,0.6);
         legend->SetHeader("Legend","C"); // option "C" allows to center the header
         legend->AddEntry(mc,"Monte Carlo","f");
@@ -152,7 +152,7 @@ void plotter::basic_plot(TString ref, TString title, int xmin, int xmax, TString
     return; 
 }
 
-void plotter::ratio_plot(TString ref, TString title, int xmin, int xmax, TString plt_typ){
+void plotter::ratio_plot(TString ref, TString title, int xmin, int xmax, TString plt_typ) {
     // Define the Canvas
     TCanvas *c = new TCanvas(ref, ref, c_width, c_height);
     data = (TH1F*)f_data->Get(ref)->Clone("data");
@@ -178,7 +178,7 @@ void plotter::ratio_plot(TString ref, TString title, int xmin, int xmax, TString
 
     // Draw Commands
     // Default plot: MC -> blue solid fill, Data -> black markers w/ errorbars
-    if (plt_typ == "DEFAULT"){
+    if (plt_typ == "DEFAULT") {
 
         mc->SetFillColor(38);
         mc->SetLineColor(kBlue);
@@ -192,7 +192,7 @@ void plotter::ratio_plot(TString ref, TString title, int xmin, int xmax, TString
     }    
 
     // Plot more suited towards plots w/ large bin sizes relative to dataset (i.e. jets plot)
-    if (plt_typ == "BARS"){
+    if (plt_typ == "BARS") {
 
         pad1->SetLogy(1);
 
@@ -258,7 +258,7 @@ void plotter::ratio_plot(TString ref, TString title, int xmin, int xmax, TString
     c->SaveAs(save_path + ref + save_ext);
 }
 
-void plotter::plot_data(TString ref, TString title, int xmin, int xmax, TString root_param){
+void plotter::plot_data(TString ref, TString title, int xmin, int xmax, TString root_param) {
 
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
     data = (TH1F*)f_data->Get(ref)->Clone("data");
@@ -280,7 +280,7 @@ void plotter::plot_data(TString ref, TString title, int xmin, int xmax, TString 
     return;
 }
 
-void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString root_param){
+void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString root_param) {
 
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
     data = (TH1F*)f_data->Get(ref)->Clone("data");
@@ -303,7 +303,7 @@ void plotter::plot_mc(TString ref, TString title, int xmin, int xmax, TString ro
     return;
 }
 
-void plotter::add_toPaths(TString new_mcPath, TString new_name){
+void plotter::add_toPaths(TString new_mcPath, TString new_name) {
 
     TFile *new_fmc = new TFile(new_mcPath);
     pathPile.push_back(new_fmc);
@@ -312,7 +312,7 @@ void plotter::add_toPaths(TString new_mcPath, TString new_name){
     return;
 }
 
-void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString opt){
+void plotter::plot_stack(TString ref, TString save_name, int xmin, int xmax, TString opt) {
     
     // Initialize Canvas
     TCanvas *C = new TCanvas(ref, ref, c_width, c_height);
@@ -320,7 +320,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     gStyle->SetOptStat(0);
 
     // Initialize Stack
-    THStack *stack = new THStack("stack", title);
+    THStack *stack = new THStack("stack", "");
 
     // Upper plot will be in pad1
     TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
@@ -330,7 +330,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     pad1->cd();               // pad1 becomes the current pad
 
     // Legend
-    auto legend = new TLegend(0.9,0.9,0.7,0.8);
+    auto legend = new TLegend(0.9,0.9,0.6,0.7);
     legend->SetHeader("","C"); // option "C" allows to center the header
 
     // Data file: f_data
@@ -354,7 +354,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     int colors[] = {7, 3, 9, 28, 46};
     // parse over  mc files, plot histograms, then push to stack
     vector<plot> plots;
-    for (unsigned int i = 0; i < pathPile.size(); i++){
+    for (unsigned int i = 0; i < pathPile.size(); i++) {
         plot new_plot;
         plots.push_back(new_plot);
 
@@ -370,8 +370,8 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     }
 
     // Plot Organization
-    if (opt == "DEFAULT"){
-        for (unsigned int i = 0; i < plots.size(); i++){
+    if (opt == "DEFAULT") {
+        for (unsigned int i = 0; i < plots.size(); i++) {
             stack->Add(plots.at(i).hist);
         }
     }
@@ -379,31 +379,31 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
         vector<double> integrals;
         vector<TH1F*> sort_hists;
 
-        for (unsigned int i = 0; i < plots.size(); i++){
+        for (unsigned int i = 0; i < plots.size(); i++) {
             integrals.push_back(plots.at(i).integral);
         }
 
         sort(integrals.begin(), integrals.end(), greater<double>());
         
-        for (unsigned int i = 0; i < integrals.size(); i++){
-            for (unsigned int j = 0; j < plots.size(); j++){
+        for (unsigned int i = 0; i < integrals.size(); i++) {
+            for (unsigned int j = 0; j < plots.size(); j++) {
             
-                if (integrals[i] == plots.at(j).integral){
+                if (integrals[i] == plots.at(j).integral) {
                     sort_hists.push_back(plots.at(j).hist);
                 }
             
             }
         }
         
-        if (opt == "G"){
-            for (unsigned int i = 0; i < sort_hists.size(); i++){
+        if (opt == "G") {
+            for (unsigned int i = 0; i < sort_hists.size(); i++) {
                 stack->Add(sort_hists.at(i));
             }
         }
 
-        else if (opt == "L"){
+        else if (opt == "L") {
             reverse(sort_hists.begin(), sort_hists.end());
-            for (unsigned int i = 0; i < sort_hists.size(); i++){
+            for (unsigned int i = 0; i < sort_hists.size(); i++) {
                 stack->Add(sort_hists.at(i));
             }
         }
@@ -422,8 +422,10 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     legend->SetFillStyle(0);
     legend->Draw();
 
+    // Draw Textboxes
+
     // Set log scale if requested
-    if (logY_bool == true){
+    if (logY_bool == true) {
         pad1->SetLogy(1);
         logY_bool = false;
     }
@@ -432,7 +434,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     // lower plot will be in pad
     C->cd();          // Go back to the main canvas before defining pad2
     TPad *pad2 = new TPad("pad2", "pad2", 0, 0.1, 1, 0.3);
-    pad2->SetTopMargin(0.1);
+    pad2->SetTopMargin(0);
     pad2->SetBottomMargin(0.2);
     pad2->SetLeftMargin(0.140);
     pad2->Draw();
@@ -478,7 +480,7 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
     line->Draw("SAME");
     gStyle->SetLineStyle(7);
 
-    C->SaveAs(save_path + ref + save_ext);
+    C->SaveAs(save_path + save_name + save_ext);
 
     // Delete hists to avoid "memory leak" errors
     delete mc_merged;
@@ -489,13 +491,13 @@ void plotter::plot_stack(TString ref, TString title, int xmin, int xmax, TString
 
 
 // Getters
-TString plotter::get_xLabel(TString ref){
+TString plotter::get_xLabel(TString ref) {
 
     TString names[11] = {"mass", "small_mass", "met", "ht", "ll_pt", "lt_pt", "ll_phi", "lt_phi", "ll_eta", "lt_eta", "jets"};
     TString xlabels[11] = {"GeV", "GeV", "GeV", "GeV", "GeV", "GeV", "Radians", "Radians", "#eta", "#eta", "Number of jets"};
 
-    for (unsigned int i = 0; i < 11; i++){
-        if (ref==names[i]){
+    for (unsigned int i = 0; i < 11; i++) {
+        if (ref==names[i]) {
             return xlabels[i];
         }
     }
@@ -504,71 +506,38 @@ TString plotter::get_xLabel(TString ref){
 }
 
 // Setters
-void plotter::set_canvasSize(int new_width, int new_height){
+void plotter::set_canvasSize(int new_width, int new_height) {
     c_width = new_width;
     c_height = new_height;
     return;
 }
 
-void plotter::set_saveExtension(TString new_ext){
+void plotter::set_saveExtension(TString new_ext) {
     save_ext = new_ext;
     return;
 }
 
-void plotter::set_savePath(TString new_path){
+void plotter::set_savePath(TString new_path) {
     save_path = new_path;
     return;
 }
 
-void plotter::set_barsLegend(bool new_status){
+void plotter::set_barsLegend(bool new_status) {
     legend_bool = new_status;
     return;
 }
 
-void plotter::set_ratioRebin(int new_ratio_rebin){
+void plotter::set_ratioRebin(int new_ratio_rebin) {
     ratio_rebin = new_ratio_rebin;
     return;
 }
 
-void plotter::set_logY(bool new_status){
+void plotter::set_logY(bool new_status) {
     logY_bool = new_status;
     return;
 }
 
-void Z_M50(){
-
-    TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
-    TFile *f_mc = new TFile("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M50.root");
-
-    plotter *pltr = new plotter(f_data, f_mc);
-
-    pltr->ratio_plot("mass", "Invariant Mass", 0, 200, "DEFAULT");
-
-    pltr->plot_data("small_mass", "Upsilon and J/#Psi", 0, 20, "HIST");
-
-    pltr->ratio_plot("met", "Missing Transverse Energy", 0, 200, "DEFAULT");
-
-    pltr->ratio_plot("jets", "Jets for p_{T} > 40", 0, 10, "BARS");
-
-    pltr->ratio_plot("ht", "Hadronic Transverse Momentum", 40, 300, "DEFAULT");
-
-    pltr->ratio_plot("lt_pt", "Tight Lepton Transverse Momentum", 20, 200, "DEFAULT");
-
-    pltr->ratio_plot("ll_pt", "Loose Lepton Transverse Momentum", 10, 200, "DEFAULT");
-
-    pltr->ratio_plot("lt_phi", "Tight Lepton #phi", -4, 4, "BARS");
-
-    pltr->ratio_plot("ll_phi", "Loose Lepton #phi", -4, 4, "BARS");
-
-    pltr->ratio_plot("lt_eta", "Tight Lepton #eta", -4, 4, "BARS");
-
-    pltr->ratio_plot("ll_eta", "Loose Lepton #eta", -4, 4, "BARS");
-
-
-    return;
-}
-
-void stacks(){
+void stacks() {
 
     TFile *f_data = new TFile("/home/users/jguiang/projects/zpeak/plotter/data.root");
 
@@ -580,37 +549,37 @@ void stacks(){
     pltr->add_toPaths("/home/users/jguiang/projects/zpeak/plotter/mc_Z_M10to50.root", "DY 10 < M < 50");
 
     // Plot stacks
-    pltr->plot_stack("mass", "Invariant Mass", 0, 200, "L");
+    pltr->plot_stack("mass", "inv_mass", 0, 200, "L");
 
-    pltr->plot_stack("ht", "Hadronic Transverse Momentum", 40, 200, "L");
+    pltr->plot_stack("ht", "ht", 40, 200, "L");
 
     pltr->set_logY(true);
-    pltr->plot_stack("jets", "Jets for p_{T} > 40", 0, 10, "L");
+    pltr->plot_stack("jets", "jets", 0, 10, "L");
     
-    pltr->plot_stack("met", "Missing Transverse Energy", 0, 200, "L");
+    pltr->plot_stack("met", "met", 0, 200, "L");
     
-    pltr->plot_stack("lt_pt", "Tight Lepton Transverse Momentum", 20, 200, "L");
+    pltr->plot_stack("lt_pt", "lt_pt", 20, 200, "L");
 
-    pltr->plot_stack("ll_pt", "Loose Lepton Transverse Momentum", 10, 200, "L");
-
-    pltr->set_logY(true);
-    pltr->plot_stack("lt_phi", "Tight Lepton #phi", -4, 4, "L");
+    pltr->plot_stack("ll_pt", "ll_pt", 10, 200, "L");
 
     pltr->set_logY(true);
-    pltr->plot_stack("ll_phi", "Loose Lepton #phi", -4, 4, "L");
+    pltr->plot_stack("lt_phi", "lt_phi", -4, 4, "L");
 
     pltr->set_logY(true);
-    pltr->plot_stack("lt_eta", "Tight Lepton #eta", -4, 4, "L");
+    pltr->plot_stack("ll_phi", "ll_phi", -4, 4, "L");
 
     pltr->set_logY(true);
-    pltr->plot_stack("ll_eta", "Loose Lepton #eta", -4, 4, "L");
+    pltr->plot_stack("lt_eta", "lt_eta", -4, 4, "L");
+
+    pltr->set_logY(true);
+    pltr->plot_stack("ll_eta", "ll_eta", -4, 4, "L");
 
     return;
 }
 
 
 // Main function
-void ooplt(){
+void ooplt() {
     
     stacks();
 
