@@ -21,21 +21,28 @@
                 margin-bottom: 0px;
                 opacity: 0.2;
                 color: #fff;
-                background: #000 url("") center center;
+                background-image: #fff url("") center center;
+                background-color: #ffffff !important;
+                background-size: 20% !important;
+
+                -webkit-filter: blur(5px);
+                -moz-filter: blur(5px);
+                -o-filter: blur(5px);
+                -ms-filter: blur(5px);
+                filter: blur(5px);
+
+                overflow: hidden;
                 width: 100%;
                 height: 100%;
-                background-size: cover;
-                overflow: hidden;
 
-
-                  position:absolute;
-                  top:0;left:0;
-                    z-index:1;
-                  }
-            .jumbotron {position:relative;padding:50px;}
+                position:absolute;
+                top:0;left:0;
+                z-index:1;
+            }
+            .jumbotron {position:relative;padding:50px;overflow:hidden}
             .jumbotron .container {z-index:2;
-             position:relative;
-              z-index:2;
+                position:relative;
+                z-index:2;
             }
         </style>
 
@@ -75,10 +82,15 @@
         <script type="text/javascript">
 
             var php_out = <?php echo json_encode($images); ?>;
-            /* console.log(<?php print_r(dirname(__FILE__)); ?>); */
 
             $(function() {
                 load_page(php_out);
+                $('[id^=img_]').mouseenter(
+                    function() {
+                        $("#jumbo").css("background","#000 url('"+$(this).attr("src")+"') center center");
+                    } 
+                );
+                console.log($('[id^=img_]'));
             });
 
             function load_page(php_out) {
@@ -118,7 +130,6 @@
 
                 for (var i = 0; i < data.length; i++) {
                     if (data[i]["name"].toLowerCase().indexOf(search) < 0) {
-                        console.log(search);
                         console.log("hid "+data[i]["name"])
                         data[i]["hidden"] = true;
                     }
@@ -158,7 +169,7 @@
                     if (data[i]["hidden"]) {
                         continue;
                     }
-                    $("#grid_" + counter).append("<h4>"+data[i]["name"]+"</h4><a href="+data[i]["pdf_path"]+"><img src="+data[i]["png_path"]+" width=200 height=240></a>");
+                    $("#grid_" + counter).append("<h4>"+data[i]["name"]+"</h4><a href="+data[i]["pdf_path"]+"><img id=img_"+counter+" src="+data[i]["png_path"]+" width=200 height=240></a>");
                     $("#grid_" + counter).append("");
                     counter++;
                 }
@@ -199,12 +210,12 @@
         </nav>
 
         <!-- Jumbotron -->
-        <div id="jumbo" class="jumbotron jumbotron-billboard">
-            <div class="main"></div>
+        <div class="jumbotron jumbotron-billboard">
+            <div id="jumbo" class="main"></div>
             <p><br /><p>
             <div class="container">
                 <h1>AutoPlotter</h1>
-                <p>Click on any of the thumbnails below to view the full pdf of your plot or click the button below to view the Github page for AutoPlotter.</p>
+                <p>Click on any of the thumbnails below to view the full pdf of your plot or click the button below to view the source code for AutoPlotter.</p>
                 <p><a class="btn btn-primary btn-lg" href="http://github.com/jkguiang/AutoPlotter" role="button">Github &raquo;</a></p>
             </div>
         </div>
