@@ -20,3 +20,4 @@ AutoPlotter Features:
 Features to implement:
 -Text highlight from search
 -Unique url for searches to allow for easy sharing
+-Tooltip displaying metadata for each graph on hover
