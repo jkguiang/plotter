@@ -46,9 +46,8 @@
 
                 position: absolute;
                 top:0;left:0;
-                z-index:1;
+                z-index:auto;
             }
-            
             
             .well {
                 overflow: hidden;
@@ -96,9 +95,11 @@
         <script type="text/javascript">
 
             var php_out = <?php echo json_encode($images); ?>;
-            var initMap = {"thumbnails":{"width": 0, "height": 0}};
+            var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
+            var page_loads = 0;
 
             $(function() {
+                page_loads++;
                 load_page(php_out);
             });
 
@@ -113,20 +114,21 @@
                 );
 
                 $("#slider").bootstrapSlider({
+                        id: "slider0",
                         ticks: [0, 100, 200],
                         ticks_labels: ['0%', '100%', '200%'],
                         ticks_snap_bounds: 5,
                         tooltip_position: 'bottom'
                 });
                 $("#slider").on("slide", function(slideEvt) {
-                    $("img").attr("width", initMap["thumbnails"]["width"]*(slideEvt.value/100));
-                    $("img").attr("height", initMap["thumbnails"]["height"]*(slideEvt.value/100));
+                    $("img").attr("width", indexMap["thumbnails"]["width"]*(slideEvt.value/100));
+                    $("img").attr("height", indexMap["thumbnails"]["height"]*(slideEvt.value/100));
                 });
 
                 // Ensure that images are drawn with slideEvt value when page is loaded (so if page is refreshed by search funct, maintain size)
                 var val = $("#slider").attr("value");
-                $("img").attr("width", initMap["thumbnails"]["width"]*(val/100));
-                $("img").attr("height", initMap["thumbnails"]["height"]*(val/100));
+                $("img").attr("width", indexMap["thumbnails"]["width"]*(val/100));
+                $("img").attr("height", indexMap["thumbnails"]["height"]*(val/100));
 
             }
 
@@ -143,15 +145,15 @@
 
                     // Get divisor for image dimensions
                     var div = get_div(Math.max(width, height));
-                    initMap["thumbnails"]["width"] = width/div;
-                    initMap["thumbnails"]["height"] = height/div;
+                    indexMap["thumbnails"]["width"] = width/div;
+                    indexMap["thumbnails"]["height"] = height/div;
 
                     new_json.push({
                         "name": name,
                         "png_path": png_path,
                         "pdf_path": pdf_path,
-                        "width": initMap["thumbnails"]["width"],
-                        "height": initMap["thumbnails"]["height"],
+                        "width": indexMap["thumbnails"]["width"],
+                        "height": indexMap["thumbnails"]["height"],
                         "hidden": false,
                     });
                 }                
@@ -170,17 +172,26 @@
             }
 
             function refresh() {
+                page_loads++;
                 load_page(php_out);
             }
 
             function filter(data) {
 
                 var input = document.getElementById('search');
-                var search = input.value.toLowerCase();
-
+                if (page_loads == 1 && window.location.hash != "") {
+                    var search = window.location.hash.split("#")[1];
+                }
+                else{
+                    if (input == "") {
+                        window.location.hash = "";
+                    }
+                    var search = input.value.toLowerCase();
+                    window.location.hash = search;
+                }
+                indexMap["search"] = search;
                 for (var i = 0; i < data.length; i++) {
                     if (data[i]["name"].toLowerCase().indexOf(search) < 0) {
-                        console.log("hid "+data[i]["name"])
                         data[i]["hidden"] = true;
                     }
                 }
@@ -214,13 +225,36 @@
             function fill_grid(data) {
 
                 var counter = 0;
+                var new_search = "";
 
                 for (var i = 0; i < data.length; i++) {
                     if (data[i]["hidden"]) {
                         continue;
                     }
 
-                    $("#grid_" + counter).append("<h4>"+data[i]["name"]+"</h4><a href="+data[i]["pdf_path"]+"><img id=img_"+counter+" src="+data[i]["png_path"]+
+                    var new_split = "";
+                    var new_name = "";
+
+                    if (indexMap["search"] != "") {
+                        new_search = indexMap["search"];
+                        new_split = data[i]["name"].split(new_search);
+                        new_name = "";
+
+                        for (var j = 0; j < new_split.length; j++) {
+                            new_name += new_split[j];
+
+                            if (data[i]["name"].indexOf(new_name + new_search) != -1){
+                                new_name += "<font class='bg-success'>"+new_search+"</font>";
+                            }
+                        }
+                    }
+
+                    else {
+                        new_name = data[i]["name"];
+                    }
+
+
+                    $("#grid_" + counter).append("<h4>"+new_name+"</h4><a href="+data[i]["pdf_path"]+"><img id=img_"+counter+" src="+data[i]["png_path"]+
                         " width="+data[i]["width"]+" height="+data[i]["height"]+"></a>");
                     counter++;
                 }
@@ -289,7 +323,7 @@
                                         <input id="slider" type="text" data-slider-ticks="[0, 100, 200]" data-slider-ticks-snap-bounds="5" data-slider-ticks-labels='["0%", "100%", "200%"]' data-slider-value="100"/>
                                     </div>
                                 </form>
-                                <a class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoPlotter" role="button">Github &raquo;</a>
+                                <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoPlotter" role="button">Github &raquo;</a>
                             </div>
                         </div>
                     </div>

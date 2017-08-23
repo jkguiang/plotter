@@ -14,10 +14,9 @@ run.sh:
 
 AutoPlotter Features:
 -Beautiful UI
--Quick search
+-Quick search with text highlights
+-Unique url for searches to allow for easy sharing
 -Slider for changing thumbnail size
 
 Features to implement:
--Text highlight from search
--Unique url for searches to allow for easy sharing
 -Tooltip displaying metadata for each graph on hover
