@@ -11,3 +11,12 @@ run.sh:
     1.  setup - set up directories and files, run doAll.C, run ooplt.C, update web interface
         plot - run ooplt.C, update web interface
         scan - run doAll.C
+
+AutoPlotter Features:
+-Beautiful UI
+-Quick search
+-Slider for changing thumbnail size
+
+Features to implement:
+-Text highlight from search
+-Unique url for searches to allow for easy sharing
