@@ -25,12 +25,6 @@
                 border: 1px solid #cecece;
             }
             
-            .img-container {
-                height: 150px;
-                width: 180px;
-                overflow: hidden;
-            }
-
             .well-image .bg {
                 pointer-events: none;
                 margin-bottom: 0px;
@@ -61,33 +55,6 @@
                 width: 115%;
             }
 
-            .jumbotron-billboard .main {
-                margin-bottom: 0px;
-                opacity: 0.2;
-                color: #fff;
-                background-image: #fff url("") center center;
-                background-color: #ffffff !important;
-                background-size: contain !important;
-
-                -webkit-filter: blur(5px);
-                -moz-filter: blur(5px);
-                -o-filter: blur(5px);
-                -ms-filter: blur(5px);
-                filter: blur(5px);
-
-                overflow: hidden;
-                width: 100%;
-                height: 115%;
-
-                position:absolute;
-                top:0;left:0;
-                z-index:1;
-            }
-            .jumbotron {position:relative;padding:50px;overflow:hidden}
-            .jumbotron .container {z-index:2;
-                position:relative;
-                z-index:2;
-            }
         </style>
 
         <!-- PHP -->
@@ -144,6 +111,7 @@
                         $("#well").css("background","#000 url('"+$(this).attr("src")+"') no-repeat center center");
                     } 
                 );
+
                 $("#slider").bootstrapSlider({
                         ticks: [0, 100, 200],
                         ticks_labels: ['0%', '100%', '200%'],
