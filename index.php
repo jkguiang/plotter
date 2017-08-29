@@ -76,8 +76,8 @@
 
             $cwd = getcwd();
 
-            $png_path = ("static/pngs/");
-            $pdf_path = ("static/pdfs/");
+            $png_path = ("pngs/");
+            $pdf_path = ("pdfs/");
 
             $pngs = scandir($cwd . "/" . $png_path);
             $pdfs = scandir($cwd . "/" . $pdf_path);
